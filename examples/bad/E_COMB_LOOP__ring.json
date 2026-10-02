@@ -1,0 +1,17 @@
+{
+  "top": "ring",
+  "modules": {
+    "ring": {
+      "ports": {"a": {"dir": "in", "width": 4}, "y": {"dir": "out", "width": 4}},
+      "instances": {
+        "x0": {"type": "rg_xor", "params": {"WIDTH": 4}},
+        "x1": {"type": "rg_xor", "params": {"WIDTH": 4}}
+      },
+      "connect": [
+        {"from": "a", "to": ["x0.a", "x1.a"]},
+        {"from": "x0.y", "to": ["x1.b", "y"]},
+        {"from": "x1.y", "to": "x0.b"}
+      ]
+    }
+  }
+}

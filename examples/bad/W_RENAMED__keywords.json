@@ -1,0 +1,10 @@
+{
+  "top": "names",
+  "modules": {
+    "names": {
+      "ports": {"a": {"dir": "in", "width": 2}, "y": {"dir": "out", "width": 2}, "begin_y": {"dir": "out", "width": 2}},
+      "instances": {"begin": {"type": "rg_not", "params": {"WIDTH": 2}}},
+      "connect": [{"from": "a", "to": "begin.a"}, {"from": "begin.y", "to": ["y", "begin_y"]}]
+    }
+  }
+}

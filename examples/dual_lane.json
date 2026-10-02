@@ -1,0 +1,55 @@
+{
+  "top": "dual_lane",
+  "modules": {
+    "lane": {
+      "params": {"W": 8},
+      "ports": {
+        "clk":   {"dir": "in", "kind": "clock"},
+        "rst_n": {"dir": "in", "kind": "reset"},
+        "a":     {"dir": "in", "width": "W"},
+        "b":     {"dir": "in", "width": "W"},
+        "sel":   {"dir": "in"},
+        "y":     {"dir": "out", "width": "W+1"}
+      },
+      "instances": {
+        "sum":   {"type": "rg_add",  "params": {"WIDTH": "W+1"}},
+        "diff":  {"type": "rg_xor",  "params": {"WIDTH": "W+1"}},
+        "pick":  {"type": "rg_mux2", "params": {"WIDTH": "W+1"}},
+        "out_q": {"type": "rg_reg",  "params": {"WIDTH": "W+1"}}
+      },
+      "connect": [
+        {"from": "a", "to": ["sum.a", "diff.a"], "adapt": "zext"},
+        {"from": "b", "to": ["sum.b", "diff.b"], "adapt": "zext"},
+        {"from": "sel", "to": "pick.sel"},
+        {"from": "sum.y", "to": "pick.a"},
+        {"from": "diff.y", "to": "pick.b"},
+        {"from": "pick.y", "to": "out_q.d"},
+        {"from": "out_q.q", "to": "y", "pipeline": 1}
+      ],
+      "tie": {"out_q.en": 1}
+    },
+    "dual_lane": {
+      "ports": {
+        "clk":   {"dir": "in", "kind": "clock"},
+        "rst_n": {"dir": "in", "kind": "reset"},
+        "a0":    {"dir": "in", "width": 8},
+        "b0":    {"dir": "in", "width": 8},
+        "a1":    {"dir": "in", "width": 16},
+        "b1":    {"dir": "in", "width": 16},
+        "sel":   {"dir": "in", "width": 2},
+        "y0":    {"dir": "out", "width": 9},
+        "y1":    {"dir": "out", "width": 17}
+      },
+      "instances": {
+        "l0": {"type": "lane", "params": {"W": 8}},
+        "l1": {"type": "lane", "params": {"W": 16}}
+      },
+      "connect": [
+        {"from": "a0", "to": "l0.a"}, {"from": "b0", "to": "l0.b"}, {"from": "sel[0]", "to": "l0.sel"},
+        {"from": "a1", "to": "l1.a"}, {"from": "b1", "to": "l1.b"}, {"from": "sel[1]", "to": "l1.sel"},
+        {"from": "l0.y", "to": "y0"},
+        {"from": "l1.y", "to": "y1"}
+      ]
+    }
+  }
+}

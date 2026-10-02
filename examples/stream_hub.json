@@ -1,0 +1,52 @@
+{
+  "top": "stream_hub",
+  "modules": {
+    "accum": {
+      "params": {"W": 16},
+      "ports": {
+        "clk": {"dir": "in", "kind": "clock"}, "rst_n": {"dir": "in", "kind": "reset"},
+        "x": {"dir": "in", "width": "W"}, "en": {"dir": "in"}, "acc": {"dir": "out", "width": "W"}
+      },
+      "instances": {
+        "add": {"type": "rg_add", "params": {"WIDTH": "W"}},
+        "r":   {"type": "rg_reg", "params": {"WIDTH": "W"}}
+      },
+      "connect": [
+        {"from": "r.q", "to": ["add.a", "acc"]},
+        {"from": "x", "to": "add.b"},
+        {"from": "add.y", "to": "r.d"},
+        {"from": "en", "to": "r.en"}
+      ]
+    },
+    "stream_hub": {
+      "ports": {
+        "clk": {"dir": "in", "kind": "clock"}, "rst_n": {"dir": "in", "kind": "reset"},
+        "push": {"dir": "in", "width": 3}, "req": {"dir": "in", "width": 3},
+        "din0": {"dir": "in", "width": 8}, "din1": {"dir": "in", "width": 8}, "din2": {"dir": "in", "width": 8},
+        "grant": {"dir": "out", "width": 3}, "sum": {"dir": "out", "width": 20}
+      },
+      "instances": {
+        "f0": {"type": "rg_fifo", "params": {"WIDTH": 8, "DEPTH": 8}},
+        "f1": {"type": "rg_fifo", "params": {"WIDTH": 8, "DEPTH": 8}},
+        "f2": {"type": "rg_fifo", "params": {"WIDTH": 8, "DEPTH": 8}},
+        "arb": {"type": "rg_rr_arb", "params": {"N": 3}},
+        "m1": {"type": "rg_mux2", "params": {"WIDTH": 8}},
+        "m2": {"type": "rg_mux2", "params": {"WIDTH": 8}},
+        "acc": {"type": "accum", "params": {"W": 20}}
+      },
+      "connect": [
+        {"from": "push[0]", "to": "f0.push"}, {"from": "push[1]", "to": "f1.push"}, {"from": "push[2]", "to": "f2.push"},
+        {"from": "din0", "to": "f0.din"}, {"from": "din1", "to": "f1.din"}, {"from": "din2", "to": "f2.din"},
+        {"from": "req", "to": "arb.req"},
+        {"from": "arb.grant", "to": "grant"},
+        {"from": "arb.grant[0]", "to": "f0.pop"}, {"from": "arb.grant[1]", "to": ["f1.pop", "m1.sel"]},
+        {"from": "arb.grant[2]", "to": ["f2.pop", "m2.sel"]},
+        {"from": "f0.dout", "to": "m1.a"}, {"from": "f1.dout", "to": "m1.b"},
+        {"from": "m1.y", "to": "m2.a"}, {"from": "f2.dout", "to": "m2.b"},
+        {"from": "m2.y", "to": "acc.x", "adapt": "zext", "pipeline": 1},
+        {"from": "acc.acc", "to": "sum"}
+      ],
+      "tie": {"acc.en": 1}
+    }
+  }
+}

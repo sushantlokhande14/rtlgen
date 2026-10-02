@@ -1,0 +1,10 @@
+{
+  "top": "adder",
+  "modules": {
+    "adder": {
+      "ports": {"a": {"dir": "in", "width": 8}, "b": {"dir": "in", "width": 8}, "s": {"dir": "out", "width": 9}},
+      "instances": {"add": {"type": "rg_add", "params": {"WIDTH": 8}}},
+      "connect": [{"from": "a", "to": "add.a"}, {"from": "b", "to": "add.b"}, {"from": "add.y", "to": "s"}]
+    }
+  }
+}
