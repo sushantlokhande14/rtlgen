@@ -39,6 +39,8 @@ def run_rtlgen(rtlgen, desc_path, out_v, checks=True):
     if not checks:
         cmd.insert(1, "--no-checks")
     r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=120)
+    if r.returncode not in (0, 1):  # a crash must not count as "rejected"
+        raise RuntimeError(f"rtlgen exited with {r.returncode} on {desc_path}:\n{r.stdout[-2000:]}")
     diags = []
     if os.path.exists(out_v + ".diags.json"):
         with open(out_v + ".diags.json") as f:

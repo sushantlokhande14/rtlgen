@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        flags: ["", "-fsanitize=address,undefined -fno-sanitize-recover=all -fno-omit-frame-pointer"]
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y yosys iverilog nlohmann-json3-dev ninja-build
+      - run: cmake -S . -B build -G Ninja -DCMAKE_CXX_FLAGS="${{ matrix.flags }}"
+      - run: cmake --build build
+      - run: ctest --test-dir build --output-on-failure
+
+  sweep-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y yosys nlohmann-json3-dev ninja-build
+      - run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build
+      - run: python3 tools/sweep.py --count 100 --seed 7 --out bench/sweep
+      - run: python3 tools/regress.py --rtlgen build/rtlgen --sweep bench/sweep --jobs 4
+      - run: python3 tools/regress.py --rtlgen build/rtlgen --faults bench/sweep --per-class 10 --jobs 4
